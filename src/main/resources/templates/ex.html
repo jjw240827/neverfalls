@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>화성시 행사 관리 서비스 - 현장 참가자 관리</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f8f9fa; color: #333; overflow-x: hidden; }
+        .top-navbar { background-color: #1a1a1a; color: #fff; height: 56px; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; position: fixed; top: 0; left: 0; right: 0; z-index: 1030; }
+        .brand-zone { display: flex; align-items: center; font-weight: bold; font-size: 14px; }
+        .brand-logo { background-color: #6f42c1; color: white; padding: 2px 6px; border-radius: 4px; margin-right: 8px; font-size: 12px; }
+        .admin-profile-zone { display: flex; align-items: center; gap: 10px; font-size: 12px; border-left: 1px solid #333; padding-left: 20px; height: 30px; }
+        .admin-profile-zone .admin-badge { background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; display: flex; align-items: center; gap: 3px; }
+        .admin-profile-zone .admin-info-text { color: #fff; }
+        
+        .btn-logout { background-color: #dc3545; color: white; padding: 3px 10px; border-radius: 4px; text-decoration: none; font-size: 11px; margin-left: 10px; display: inline-flex; align-items: center; gap: 4px; transition: background-color 0.2s; }
+        .btn-logout:hover { background-color: #c82333; color: white; }
+
+        .main-content { padding: 85px 30px 40px 30px; }
+        .content-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .content-header h2 { font-size: 20px; font-weight: bold; margin: 0; }
+        .badge-purple-light { background-color: #f0ecfc; color: #6f42c1; font-size: 11px; padding: 4px 8px; border-radius: 4px; font-weight: 500; }
+        .filter-zone { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #555; margin-bottom: 15px; }
+        .badge-count { border: 1px solid #6f42c1; color: #6f42c1; background-color: #fff; padding: 2px 10px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+        .data-card { background-color: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 25px; }
+        .eventus-table { width: 100%; margin-bottom: 0; font-size: 13px; }
+        .eventus-table th { background-color: #fafafa; color: #333; font-weight: bold; padding: 12px 16px; border-bottom: 1px solid #e0e0e0; }
+        .eventus-table td { padding: 14px 16px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+        .btn-checkin-action { background: none; border: none; color: #333; text-decoration: underline; font-size: 13px; padding: 0; font-weight: 500; }
+        .btn-checkin-action:hover { color: #f15a24; }
+        .btn-checkin-action:disabled { color: #bbb; text-decoration: none; cursor: not-allowed; }
+        .badge-grade { font-size: 11px; padding: 4px 6px; font-weight: normal; border-radius: 3px; }
+        .dashboard-title { font-size: 15px; font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+        .alert-stream-container { background-color: #fff; border: 1px solid #e0e0e0; border-radius: 8px; height: 250px; overflow-y: auto; padding: 15px; }
+        .btn-go-qr { position: fixed; bottom: 30px; right: 30px; background-color: #6f42c1; color: #fff; padding: 15px 25px; border-radius: 30px; font-weight: bold; box-shadow: 0 4px 15px rgba(111, 66, 193, 0.4); text-decoration: none; }
+        .flash-alert { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); z-index: 9999; color: white; padding: 15px 30px; border-radius: 8px; font-weight: bold; display: none; }
+        .bg-vip { background-color: #28a745; }
+    </style>
+</head>
+<body>
+
+    <div id="vipFlashAlert" class="flash-alert bg-vip">👑 [VIP 입장] <span id="vipAlertName"></span> 귀빈께서 현장에 출석하셨습니다!</div>
+
+    <div class="top-navbar">
+        <div class="brand-zone">
+            <span class="brand-logo">H</span> 화성시 행사 관리 서비스
+            <span class="badge bg-light text-dark ms-3 border" id="navEventName" style="display: none; font-size: 12px; padding: 5px 10px;"></span>
+        </div>
+        <div class="admin-profile-zone" th:if="${session.loginName != null}">
+            <div class="admin-badge"><i class="bi bi-check-circle-fill"></i> 로그인 완료</div>
+            <div class="admin-info-text"><span th:text="${session.loginName}"></span> 관리자님 (<span th:text="${session.loginRole}"></span>)</div>
+            <a href="/logout" class="btn-logout"><i class="bi bi-box-arrow-right"></i> 로그아웃</a>
+        </div>
+    </div>
+
+    <a href="/qr" class="btn-go-qr"><i class="bi bi-qr-code"></i> QR 출석 페이지로 이동</a>
+
+    <div class="main-content">
+        <div class="content-header">
+            <div class="title-area">
+                <h2><span id="pageEventName" style="color: #6f42c1; margin-right: 8px; font-weight: 900;"></span>현장 참가자 관리</h2> 
+                <span class="badge-purple-light">20개 그룹 연동</span>
+            </div>
+        </div>
+        <div class="filter-zone">
+            <span>참가자</span> <span class="badge-count">출석 완료 : <span id="attendanceCount">0</span> 명 <i class="bi bi-arrow-clockwise"></i></span>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="data-card">
+                    <table class="table eventus-table">
+                        <thead><tr><th>이름</th><th>생년월일</th><th>연락처</th><th>신청 그룹</th><th>출석</th></tr></thead>
+                        <tbody>
+                            <tr th:each="p : ${participants}" th:id="'row-' + ${p.id}">
+                                <td class="fw-bold" th:text="${p.name}"></td>
+                                <td class="text-muted" th:text="${p.birth}"></td>
+                                <td class="text-muted" th:text="${p.phone}"></td>
+                                <td><span th:if="${p.grade == 'VIP'}" class="badge bg-danger badge-grade">VIP</span></td>
+                                <td><button th:id="'btn-' + ${p.id}" class="btn-checkin-action" th:onclick="sendCheckIn([[${p.id}]], [[${p.name}]], [[${p.grade}]])">출석 확인</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="dashboard-title text-success"><i class="bi bi-star-fill"></i> VIP 실시간 입장 로그</div>
+                <div id="vipAlertContainer" class="alert-stream-container" style="margin-bottom: 20px;"><p class="text-muted text-center mt-5">입장한 VIP가 없습니다.</p></div>
+                <div class="dashboard-title text-primary"><i class="bi bi-people-fill"></i> 일반 참석자 현황</div>
+                <div id="attendeeContainer" class="alert-stream-container"><p class="text-muted text-center mt-5">입장한 참석자가 없습니다.</p></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const eventName = sessionStorage.getItem('currentEventName');
+            if(eventName) {
+                const navEl = document.getElementById('navEventName');
+                navEl.innerText = eventName;
+                navEl.style.display = 'inline-block';
+                
+                const pageEl = document.getElementById('pageEventName');
+                if(pageEl) pageEl.innerText = '[' + eventName + ']';
+            }
+        });
+    </script>
+
+    <script th:inline="javascript">
+        const sock = new SockJS('/user');
+        let currentAttendance = 0;
+
+        sock.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            if(data.isWarning) return alert(data.msg);
+            
+            // 1. 테이블 UI 상태 제어
+            if (data.grade === 'VIP') {
+                const btn = document.getElementById('btn-' + data.id);
+                if (btn) { 
+                    btn.innerText = "출석 완료"; 
+                    btn.disabled = true; 
+                }
+            } else {
+                const row = document.getElementById('row-' + data.id);
+                if (row) { 
+                    row.remove(); 
+                }
+            }
+
+            // 2. 출석 카운트 증강
+            currentAttendance++;
+            document.getElementById('attendanceCount').innerText = currentAttendance;
+
+            // 3. 등급별 대시보드 로그 스트림 적재 및 화면 상단 알림 팝업 제어
+            if (data.grade === 'VIP') {
+                document.querySelector('#vipAlertContainer .text-center')?.remove();
+                const now = new Date();
+                const timeStr = now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds();
+                const box = document.createElement('div');
+                box.className = 'alert alert-success p-2 mb-2'; box.style.fontSize = "12px";
+                box.innerHTML = `👑 ${data.name} <br><small>도착 시간: ${timeStr}</small>`;
+                document.getElementById('vipAlertContainer').prepend(box);
+                
+                // 화면 상단 에메랄드 그린 플래시 팝업 노출
+                document.getElementById('vipAlertName').innerText = data.name;
+                document.getElementById('vipFlashAlert').style.display = 'block';
+                setTimeout(() => document.getElementById('vipFlashAlert').style.display = 'none', 3000);
+
+                // 🚨 [수정 완료] 자바 서버가 요구하는 &grade=VIP 파라미터를 주소창 뒤에 확실하게 붙여서 전달!
+                fetch('/api/notify-manager?name=' + encodeURIComponent(data.name) + '&grade=VIP', {
+                    method: 'POST'
+                }).then(res => console.log("카톡 요청 자바 서버로 전달 완료!"));
+
+            } else {
+                document.querySelector('#attendeeContainer .text-center')?.remove();
+                const box = document.createElement('div');
+                box.className = 'alert alert-info p-2 mb-2'; box.style.fontSize = "12px";
+                box.innerText = `✅ ${data.name} 님 입장 완료`;
+                document.getElementById('attendeeContainer').prepend(box);
+            }
+        };
+
+        function sendCheckIn(id, name, grade) {
+            if(sock.readyState === SockJS.OPEN) sock.send(JSON.stringify({ id, name, grade }));
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>로그인</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #ffffff; font-family: 'Noto Sans KR', sans-serif; display: flex; align-items: center; justify-content: center; }
+
+        /* 메인 로그인 박스 컨테이너 */
+        .login-container { display: flex; width: 1000px; max-width: 90%; min-height: 450px; align-items: center; }
+
+        /* 좌측 로고 및 텍스트 영역 */
+        .brand-section { flex: 1.1; padding-right: 60px; text-align: left; }
+        .brand-title { font-size: 72px; font-weight: 900; letter-spacing: -2px; margin: 0; color: #000000; line-height: 1.1; }
+        .brand-title span { color: #6f42c1; } /* 보라색 포인트 점 */
+        .brand-subtitle { font-size: 20px; color: #666666; font-weight: 500; margin-top: 15px; word-spacing: 2px; }
+
+        /* 중앙 세로 분할선 */
+        .divider-line { width: 1px; height: 320px; background-color: #eeeeee; }
+
+        /* 우측 입력 폼 영역 */
+        .form-section { flex: 0.9; padding-left: 60px; display: flex; flex-direction: column; }
+
+        /* 인풋 그룹 및 아이콘 레이아웃 */
+        .input-wrapper { position: relative; margin-bottom: 14px; }
+        .input-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #6f42c1; font-size: 16px; }
+        
+        /* 필수 입력 표시 빨간 점 (*) */
+        .required-mark { position: absolute; right: -12px; top: 12px; color: #ff0000; font-size: 12px; font-weight: bold; }
+
+        .form-input-custom {
+            width: 100%; padding: 14px 16px 14px 46px; font-size: 14px; 
+            border: 1px solid #e2e8f0; border-radius: 4px; background-color: #fff;
+            transition: border-color 0.2s; color: #333;
+        }
+        .form-input-custom:focus { border-color: #6f42c1; outline: none; }
+        .form-input-custom::placeholder { color: #cbd5e1; font-size: 13px; }
+
+        /* 로그인 버튼 (보라색 테마) */
+        .btn-login-submit {
+            width: 100%; background-color: #6f42c1; color: #ffffff; border: none;
+            padding: 14px; border-radius: 4px; font-size: 14px; font-weight: bold;
+            letter-spacing: 1px; transition: background 0.2s; margin-top: 10px;
+        }
+        .btn-login-submit:hover { background-color: #59339d; }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        
+        <div class="brand-section">
+            <h1 class="brand-title">화성시<span>.</span></h1>
+            <p class="brand-subtitle">행사 관리 서비스</p>
+        </div>
+
+        <div class="divider-line"></div>
+
+        <div class="form-section">
+            <div th:if="${error}" class="alert alert-danger text-center p-2 small mb-3" style="font-size: 13px; font-weight: bold;" th:text="${error}"></div>
+
+            <form action="/login" method="POST" autocomplete="off">
+                
+                <div class="input-wrapper">
+                    <i class="bi bi-person-fill input-icon"></i>
+                    <input type="text" name="username" class="form-input-custom" placeholder="아이디" required>
+                    <span class="required-mark">*</span>
+                </div>
+
+                <div class="input-wrapper">
+                    <i class="bi bi-lock-fill input-icon"></i>
+                    <input type="password" name="password" class="form-input-custom" placeholder="비밀번호" required>
+                    <span class="required-mark">*</span>
+                </div>
+
+                <button type="submit" class="btn-login-submit">LOGIN</button>
+            </form>
+        </div>
+
+    </div>
+
+</body>
+</html>

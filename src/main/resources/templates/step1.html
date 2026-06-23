@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>화성시 행사 관리 서비스 - 통합 단계 설정</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f8f9fa; color: #333; overflow-x: hidden; }
+        
+       
+        .top-navbar { background-color: #1a1a1a; color: #fff; height: 56px; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; position: fixed; top: 0; left: 0; right: 0; z-index: 1030; }
+        .top-navbar .brand-zone { display: flex; align-items: center; font-weight: bold; font-size: 14px; }
+        .top-navbar .brand-logo { background-color: #6f42c1; color: white; padding: 2px 6px; border-radius: 4px; margin-right: 8px; font-size: 12px; }
+        
+        
+        .admin-profile-zone { display: flex; align-items: center; gap: 10px; font-size: 12px; border-left: 1px solid #333; padding-left: 20px; height: 30px; }
+        .admin-profile-zone .admin-badge { background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; display: flex; align-items: center; gap: 3px; }
+        .admin-profile-zone .admin-info-text { color: #fff; }
+        
+        .main-content { padding: 90px 40px 40px 40px; }
+        .wide-form-container { max-width: 1000px; margin: 0 auto; }
+        
+        .content-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; border-bottom: 1px solid #e0e0e0; padding-bottom: 15px; }
+        .content-header h2 { font-size: 22px; font-weight: bold; margin: 0; color: #1a1a1a; }
+        
+        .step-tab-group { display: flex; gap: 10px; }
+        .step-tab-btn { background-color: #fff; border: 1px solid #ced4da; color: #666; font-size: 13px; padding: 6px 16px; border-radius: 30px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
+        .step-tab-btn.active { background-color: #f0ecfc; color: #6f42c1; border-color: #6f42c1; }
+
+        .setup-card-huge { background-color: #fff; border: 1px solid #e0e0e0; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.03); padding: 50px 60px; display: none; }
+        .setup-card-huge.active { display: block; }
+        
+        .form-label-custom { font-size: 15px; font-weight: 700; color: #1a1a1a; margin-bottom: 10px; display: block; }
+        .form-input-custom { width: 100%; border: 1px solid #ced4da; border-radius: 8px; padding: 16px; font-size: 15px; background-color: #fff; color: #333; margin-bottom: 30px; transition: all 0.2s; }
+        .form-input-custom:focus { border-color: #6f42c1; box-shadow: 0 0 0 0.25rem rgba(111, 66, 193, 0.15); outline: none; }
+        
+        .type-toggle-group { display: flex; gap: 20px; margin-bottom: 45px; }
+        .type-toggle-btn { flex: 1; border: 1px solid #ced4da; background-color: #fff; border-radius: 8px; padding: 25px; text-align: center; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+        .type-toggle-btn:hover { border-color: #6f42c1; background-color: #faf9fe; }
+        .type-toggle-btn.active { border: 2px solid #6f42c1; background-color: #f0ecfc; box-shadow: 0 4px 15px rgba(111, 66, 193, 0.1); }
+        .type-toggle-btn .btn-main-txt { font-size: 18px; font-weight: bold; color: #1a1a1a; }
+        .type-toggle-btn .btn-sub-txt { font-size: 13px; color: #666; }
+        .type-toggle-btn.active .btn-main-txt, .type-toggle-btn.active .btn-sub-txt { color: #6f42c1; }
+
+        .selected-summary-zone { display: flex; gap: 10px; margin-bottom: 35px; padding-bottom: 25px; border-bottom: 1px solid #f1f3f5; }
+        .summary-tag { background-color: #f1f3f5; color: #495057; font-size: 14px; font-weight: bold; padding: 10px 18px; border-radius: 8px; display: flex; align-items: center; gap: 8px; }
+        .summary-tag i { font-size: 16px; color: #6c757d; }
+        .summary-tag i { font-size: 16px; color: #6c757d; }
+        .scale-monitor-title { font-size: 16px; font-weight: 700; color: #1a1a1a; margin-bottom: 6px; }
+        .scale-monitor-value { font-size: 28px; font-weight: 800; color: #6f42c1; margin-bottom: 35px; }
+        .slider-wrapper { position: relative; margin-bottom: 55px; padding: 0 10px; }
+        .custom-range-slider { width: 100%; -webkit-appearance: none; background: #e9ecef; height: 8px; border-radius: 5px; outline: none; }
+        .custom-range-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; background: #3b82f6; border-radius: 50%; cursor: pointer; border: 4px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.15); transition: transform 0.1s; }
+        .custom-range-slider::-webkit-slider-thumb:hover { transform: scale(1.15); background: #2563eb; }
+        .slider-labels { display: flex; justify-content: space-between; margin-top: 15px; padding: 0 2px; }
+        .slider-labels span { font-size: 14px; color: #adb5bd; font-weight: bold; cursor: pointer; }
+        .slider-labels span.active-label { color: #1a1a1a; font-size: 15px; }
+
+        .venue-list { display: flex; flex-direction: column; gap: 20px; margin-bottom: 45px; }
+        .venue-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; cursor: pointer; transition: all 0.25s ease; display: flex; gap: 24px; align-items: center; position: relative; }
+        .venue-card:hover { transform: translateY(-2px); border-color: #6f42c1; box-shadow: 0 8px 24px rgba(111, 66, 193, 0.08); }
+        .venue-card.selected { border: 2px solid #3b82f6; background-color: #f8fafc; }
+        .venue-thumb-box { width: 140px; height: 110px; background-color: #edf2f7; border-radius: 8px; overflow: hidden; flex-shrink: 0; }
+        .venue-thumb-box img { width: 100%; height: 100%; object-fit: cover; }
+        .venue-info { flex: 1; text-align: left; }
+        .venue-title { font-size: 18px; font-weight: bold; color: #1a1a1a; margin-bottom: 6px; }
+        .venue-scale { font-size: 14px; color: #4a5568; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .venue-desc { font-size: 13px; color: #718096; line-height: 1.5; margin-bottom: 0; }
+        .venue-check-icon { font-size: 24px; color: #3b82f6; display: none; }
+        .venue-card.selected .venue-check-icon { display: block; }
+
+        .action-btn-group { display: flex; gap: 15px; }
+        .btn-prev-step { background-color: #fff; border: 1px solid #ced4da; color: #495057; font-weight: bold; padding: 16px 25px; border-radius: 8px; font-size: 16px; transition: all 0.2s; }
+        .btn-prev-step:hover { background-color: #f8f9fa; border-color: #adb5bd; }
+        
+        .btn-eventus-submit { width: 100%; background-color: #e0e0e0; color: #999; font-weight: bold; border: none; padding: 18px; border-radius: 8px; font-size: 17px; transition: all 0.2s; }
+        .btn-eventus-submit.ready { background-color: #6f42c1; color: #fff; cursor: pointer; box-shadow: 0 4px 14px rgba(111, 66, 193, 0.25); }
+        .btn-eventus-submit.ready:hover { background-color: #59339d; }
+        .btn-eventus-submit.ready.blue-btn { background-color: #3b82f6; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2); }
+        .btn-eventus-submit.ready.blue-btn:hover { background-color: #2563eb; }
+    </style>
+</head>
+<body>
+
+    <div class="top-navbar">
+        <div class="brand-zone"><span class="brand-logo">H</span> 화성시 행사 관리 서비스</div>
+        
+        <div class="d-flex align-items-center gap-3">
+            <div class="admin-profile-zone" th:if="${session.loginName != null}">
+                <div class="admin-badge"><i class="bi bi-check-circle-fill"></i> 로그인 완료</div>
+                <div class="admin-info-text">
+                    <span th:text="${session.loginName}">관리자</span> 관리자님 
+                    (<span class="small text-white-50" th:text="${session.loginRole}">총괄 기획자</span>)
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="wide-form-container">
+            
+            <div class="content-header">
+                <h2 id="mainHeaderTitle">1단계: 행사 기본 설정 (Event Setup)</h2>
+                <div class="step-tab-group">
+                    <button class="step-tab-btn active" id="tab1" onclick="moveStep(1)">STEP 01</button>
+                    <button class="step-tab-btn" id="tab2" onclick="moveStep(2)">STEP 02</button>
+                    <button class="step-tab-btn" id="tab3" onclick="moveStep(3)">STEP 03</button>
+                </div>
+            </div>
+
+            <div class="setup-card-huge active" id="panelStep1">
+                <div class="mb-2">
+                    <label class="form-label-custom">행사 이름</label>
+                    <input type="text" id="eventNameInput" class="form-input-custom" placeholder="개최할 행사 이름을 입력해 주세요" oninput="checkFormReady()">
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label-custom">개최 날짜</label>
+                    <input type="date" id="eventDateInput" class="form-input-custom" onchange="checkFormReady()">
+                </div>
+
+                <label class="form-label-custom">행사 장소 타입</label>
+                <div class="type-toggle-group">
+                    <div class="type-toggle-btn active" id="btnIndoor" onclick="selectType('indoor')">
+                        <span class="btn-main-txt"><i class="bi bi-building me-1"></i> 실내</span>
+                        <span class="btn-sub-txt">(Indoor)</span>
+                    </div>
+                    <div class="type-toggle-btn" id="btnOutdoor" onclick="selectType('outdoor')">
+                        <span class="btn-main-txt"><i class="bi bi-tree me-1"></i> 실외</span>
+                        <span class="btn-sub-txt">(Outdoor)</span>
+                    </div>
+                </div>
+
+                <div class="action-btn-group">
+                    <button id="submitBtn" class="btn-eventus-submit" disabled onclick="moveStep(2)">다음 단계로 이동</button>
+                </div>
+            </div>
+
+            <div class="setup-card-huge" id="panelStep2">
+                <div class="selected-summary-zone">
+                    <div class="summary-tag"><i class="bi bi-building"></i> <span class="sync-type-txt">실내 행사</span></div>
+                    <div class="summary-tag"><i class="bi bi-people-fill"></i> <span id="summaryCount">100-500명</span> 이하</div>
+                </div>
+
+                <div class="scale-monitor-title">인원수 선택</div>
+                <div class="scale-monitor-value" id="monitorValue">100-500명 이하</div>
+
+                <div class="slider-wrapper">
+                    <input type="range" class="custom-range-slider" id="scaleSlider" min="0" max="3" value="2" oninput="updateScaleValue(this.value)">
+                    <div class="slider-labels" id="sliderLabels">
+                        <span onclick="setSliderTick(0)">10-50명</span>
+                        <span onclick="setSliderTick(1)">50-100명</span>
+                        <span class="active-label" onclick="setSliderTick(2)">100-500명</span>
+                        <span onclick="setSliderTick(3)">500명 이상</span>
+                    </div>
+                </div>
+
+                <div class="action-btn-group">
+                    <button class="btn btn-prev-step" onclick="moveStep(1)"><i class="bi bi-arrow-left"></i> 이전 단계</button>
+                    <button class="btn btn-eventus-submit ready" style="width: auto; flex: 1;" onclick="moveStep(3)">장소 검색 (다음 단계)</button>
+                </div>
+            </div>
+
+            <div class="setup-card-huge" id="panelStep3">
+                <div class="selected-summary-zone">
+                    <div class="summary-tag"><i class="bi bi-building"></i> <span class="sync-type-txt">실내 행사</span></div>
+                    <div class="summary-tag"><i class="bi bi-people-fill"></i> <span id="summaryCountFinal">100-500명</span></div>
+                </div>
+
+                <div class="venue-list">
+                    <div class="venue-card selected" id="venue1" onclick="selectVenue('venue1')">
+                        <div class="venue-thumb-box">
+                            <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=300&q=80" alt="시티 컨벤션 센터">
+                        </div>
+                        <div class="venue-info">
+                            <div class="venue-title">시티 컨벤션 센터</div>
+                            <div class="venue-scale"><i class="bi bi-door-open-fill"></i> 인원 10-500명</div>
+                            <p class="venue-desc">쾌적한 실내 음향 시설과 대규모 네트워킹 라운지가 완비된 최고급 비즈니스 센터입니다.</p>
+                        </div>
+                        <div class="venue-check-icon"><i class="bi bi-check-circle-fill"></i></div>
+                    </div>
+
+                    <div class="venue-card" id="venue2" onclick="selectVenue('venue2')">
+                        <div class="venue-thumb-box">
+                            <img src="https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=300&q=80" alt="그랜드 힐 호텔 강당">
+                        </div>
+                        <div class="venue-info">
+                            <div class="venue-title">그랜드 힐 호텔 강당</div>
+                            <div class="venue-scale"><i class="bi bi-door-open-fill"></i> 인원 10-500명</div>
+                            <p class="venue-desc">높은 층고와 고급스러운 인테리어로 집중도 높은 해커톤 세션 및 콘퍼런스 운영이 가능합니다.</p>
+                        </div>
+                        <div class="venue-check-icon"><i class="bi bi-check-circle-fill"></i></div>
+                    </div>
+                </div>
+
+                <div class="action-btn-group">
+                    <button class="btn btn-prev-step" onclick="moveStep(2)"><i class="bi bi-arrow-left"></i> 이전 단계</button>
+                    <button class="btn btn-eventus-submit ready blue-btn" style="width: auto; flex: 1;" onclick="finishSetup()">장소 선택 및 완료</button>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        let selectedType = 'indoor';
+        const titleMapping = {
+            1: "1단계: 행사 기본 설정 (Event Setup)",
+            2: "2단계: 인원수 선택 (Scale)",
+            3: "3단계: 추천 장소 리스트 (Venues)"
+        };
+        const scaleTexts = ["10-50명 이하", "50-100명 이하", "100-500명 이하", "500명 이상 대규모"];
+        const tagTexts = ["10-50명", "50-100명", "100-500명", "500명+"];
+
+        function moveStep(stepTarget) {
+            const nameVal = document.getElementById('eventNameInput').value.trim();
+            const dateVal = document.getElementById('eventDateInput').value;
+            if ((stepTarget === 2 || stepTarget === 3) && (nameVal === "" || dateVal === "")) {
+                alert("1단계의 행사 이름과 개최 날짜를 먼저 기입해 주세요!");
+                return;
+            }
+
+            currentStep = stepTarget;
+            document.getElementById('mainHeaderTitle').innerText = titleMapping[stepTarget];
+
+            for (let i = 1; i <= 3; i++) {
+                const tab = document.getElementById('tab' + i);
+                const panel = document.getElementById('panelStep' + i);
+                if (i === stepTarget) {
+                    tab.classList.add('active');
+                    panel.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                    panel.classList.remove('active');
+                }
+            }
+        }
+
+        function selectType(type) {
+            selectedType = type;
+            const isIndoor = (type === 'indoor');
+            document.getElementById('btnIndoor').classList.toggle('active', isIndoor);
+            document.getElementById('btnOutdoor').classList.toggle('active', !isIndoor);
+            
+            const syncTxts = document.getElementsByClassName('sync-type-txt');
+            for(let txt of syncTxts) {
+                txt.innerText = isIndoor ? "실내 행사" : "실외 행사";
+            }
+        }
+
+        function checkFormReady() {
+            const nameVal = document.getElementById('eventNameInput').value.trim();
+            const dateVal = document.getElementById('eventDateInput').value;
+            const submitBtn = document.getElementById('submitBtn');
+
+            if (nameVal !== "" && dateVal !== "") {
+                submitBtn.removeAttribute('disabled');
+                submitBtn.classList.add('ready');
+            } else {
+                submitBtn.setAttribute('disabled', 'true');
+                submitBtn.classList.remove('ready');
+            }
+        }
+
+        function updateScaleValue(val) {
+            const idx = parseInt(val);
+            document.getElementById('monitorValue').innerText = scaleTexts[idx];
+            document.getElementById('summaryCount').innerText = tagTexts[idx];
+            document.getElementById('summaryCountFinal').innerText = tagTexts[idx];
+
+            const labels = document.getElementById('sliderLabels').getElementsByTagName('span');
+            for(let i=0; i<labels.length; i++) {
+                labels[i].classList.toggle('active-label', i === idx);
+            }
+        }
+
+        function setSliderTick(tick) {
+            const slider = document.getElementById('scaleSlider');
+            slider.value = tick;
+            updateScaleValue(tick);
+        }
+
+        function selectVenue(id) {
+            document.getElementById('venue1').classList.remove('selected');
+            document.getElementById('venue2').classList.remove('selected');
+            document.getElementById(id).classList.add('selected');
+        }
+
+        function finishSetup() {
+            const eventName = document.getElementById('eventNameInput').value.trim();
+            sessionStorage.setItem('currentEventName', eventName);
+            
+            
+            alert('행사 장소 설정이 최종 완료되었습니다!');
+            location.href='/ex';
+        }
+
+        window.onload = function() {
+            updateScaleValue(2);
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>화성시 행사 관리 서비스 - QR 출석</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f8f9fa; color: #333; overflow-x: hidden; }
+        
+        .top-navbar { 
+            background-color: #1a1a1a; color: #fff; height: 56px; padding: 0 30px; 
+            display: flex; align-items: center; justify-content: space-between; position: fixed; top: 0; left: 0; right: 0; z-index: 1030; 
+        }
+        .brand-zone { display: flex; align-items: center; font-weight: bold; font-size: 14px; }
+        .brand-logo { background-color: #6f42c1; color: white; padding: 2px 8px; border-radius: 4px; margin-right: 10px; font-size: 12px; }
+        
+        .admin-profile-zone { display: flex; align-items: center; gap: 10px; font-size: 12px; border-left: 1px solid #333; padding-left: 20px; height: 30px; }
+        .admin-profile-zone .admin-badge { background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; display: flex; align-items: center; gap: 3px; }
+        .admin-profile-zone .admin-info-text { color: #fff; }
+        .btn-logout { background-color: #dc3545; color: white; padding: 3px 10px; border-radius: 4px; text-decoration: none; font-size: 11px; margin-left: 10px; display: inline-flex; align-items: center; gap: 4px; transition: background-color 0.2s; }
+        .btn-logout:hover { background-color: #c82333; color: white; }
+
+        .main-content { padding: 100px 30px 40px 30px; }
+        
+        .qr-center-container { max-width: 500px; margin: 0 auto; display: flex; flex-direction: column; gap: 30px; }
+        
+        .qr-main-card { background-color: #fff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 40px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .qr-code-img { border: 6px solid #1a1a1a; padding: 15px; border-radius: 16px; cursor: pointer; transition: all 0.3s; background-color: #fff; }
+        .qr-code-img:hover { transform: scale(1.05); border-color: #6f42c1; }
+        
+        .info-input-card { background-color: #fff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 35px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); scroll-margin-top: 80px; }
+        .form-control { padding: 12px; font-size: 14px; border-radius: 8px; }
+        .btn-eventus { background-color: #6f42c1; color: white; font-weight: bold; padding: 12px; border-radius: 8px; }
+        
+        .btn-back { position: fixed; bottom: 30px; left: 30px; background-color: #333; color: #fff; padding: 12px 20px; border-radius: 30px; text-decoration: none; font-size: 14px; }
+        .btn-back:hover { color: #fff; background-color: #000; }
+    </style>
+</head>
+<body>
+
+    <div class="top-navbar">
+        <div class="brand-zone">
+            <span class="brand-logo">H</span> 화성시 행사 관리 서비스
+            <span class="badge bg-light text-dark ms-3 border" id="navEventName" style="display: none; font-size: 12px; padding: 5px 10px;"></span>
+        </div>
+        <div class="admin-profile-zone" th:if="${session.loginName != null}">
+            <div class="admin-badge"><i class="bi bi-check-circle-fill"></i> 로그인 완료</div>
+            <div class="admin-info-text"><span th:text="${session.loginName}"></span> 관리자님 (<span th:text="${session.loginRole}"></span>)</div>
+            <a href="/logout" class="btn-logout"><i class="bi bi-box-arrow-right"></i> 로그아웃</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="qr-center-container">
+            <div class="qr-main-card">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://eventus.kr/2026화성행사" 
+                     class="qr-code-img" alt="출석 QR코드" onclick="scrollToInput()">
+                <p class="mt-3 text-muted small"><i class="bi bi-qr-code-scan"></i> QR 코드를 클릭하여 인증을 시작하세요.</p>
+            </div>
+
+            <div id="inputSection" class="info-input-card">
+                <h5 class="fw-bold mb-4"><span id="pageEventName" style="color: #6f42c1; margin-right: 5px;"></span>참석자 현장 인증</h5>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">이름</label>
+                    <input type="text" class="form-control" id="searchName" placeholder="이름 입력">
+                </div>
+                <div class="mb-4">
+                    <label class="form-label small fw-bold">연락처</label>
+                    <input type="text" class="form-control" id="searchPhone" placeholder="01012345678">
+                </div>
+                <button class="btn btn-eventus w-100" onclick="verifyCheckIn()">인증 및 참석 승인</button>
+
+                <div id="resultBox" class="alert d-none mt-3">
+                    <h5 id="resultTitle" style="font-size: 15px; font-weight: bold;"></h5>
+                    <p id="resultMessage" class="small mb-0"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <a href="/ex" class="btn-back"><i class="bi bi-arrow-left"></i> 관리자 대시보드로 복귀</a>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const eventName = sessionStorage.getItem('currentEventName');
+            if(eventName) {
+                const navEl = document.getElementById('navEventName');
+                navEl.innerText = eventName;
+                navEl.style.display = 'inline-block';
+                
+                const pageEl = document.getElementById('pageEventName');
+                if(pageEl) pageEl.innerText = '[' + eventName + ']';
+            }
+        });
+    </script>
+
+    <script th:inline="javascript">
+        const participants = /*[[${participants}]]*/ [];
+        const sock = new SockJS('/user');
+        let failCount = 0;
+
+        function scrollToInput() {
+            document.getElementById('inputSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function verifyCheckIn() {
+            const inputName = document.getElementById('searchName').value.trim();
+            const inputPhone = document.getElementById('searchPhone').value.trim().replace(/-/g, "");
+            const resultBox = document.getElementById('resultBox');
+            
+            const matchedUser = participants.find(p => p.name === inputName && p.phone.replace(/-/g, "") === inputPhone);
+
+            resultBox.classList.remove('d-none', 'alert-success', 'alert-danger');
+
+            if (matchedUser) {
+                failCount = 0;
+                resultBox.classList.add('alert-success');
+                document.getElementById('resultTitle').innerText = "PASS";
+                document.getElementById('resultMessage').innerText = matchedUser.name + " 님 출석 완료!";
+                
+                // 1. 웹소켓 전송 (대시보드 실시간 동기화)
+                if(sock.readyState === SockJS.OPEN) {
+                    sock.send(JSON.stringify({ id: matchedUser.id, name: matchedUser.name, grade: matchedUser.grade }));
+                }
+            } else {
+                failCount++;
+                resultBox.classList.add('alert-danger');
+                if (failCount >= 3) {
+                    if(sock.readyState === SockJS.OPEN) sock.send(JSON.stringify({ isWarning: true, msg: "qr 3번 틀린 인원 발견" }));
+                    document.getElementById('resultTitle').innerText = "경고 전송";
+                    document.getElementById('resultMessage').innerText = "연속 3회 실패로 관리자에게 알림이 전송되었습니다.";
+                    failCount = 0;
+                } else {
+                    document.getElementById('resultTitle').innerText = "Non-PASS";
+                    document.getElementById('resultMessage').innerText = "정보를 확인해주세요 (" + failCount + "/3)";
+                }
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+plugins {
+    id 'java'
+    // 💡 호환성을 위해 4.1.0에서 안정적인 3.3.0 버전으로 변경합니다.
+    id 'org.springframework.boot' version '3.3.0'
+    id 'io.spring.dependency-management' version '1.1.5'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // 1. 타임리프 화면 엔진
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    
+    // 2. 스프링 웹 기본 내장 (ObjectMapper가 이 안에 들어있습니다)
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    
+    // 3. 실시간 통신을 위한 웹소켓 및 SockJS 라이브러리
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+    
+    // 4. 롬복 (Getter/Setter 자동화)
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    
+    // 5. 테스트 도구들
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    implementation 'net.nurigo:sdk:4.3.0'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}

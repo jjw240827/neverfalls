@@ -1,0 +1,44 @@
+{
+  "managers": [
+    {
+      "manager_id": 3,
+      "username": "1",
+      "password": "2",
+      "name": "최도현",
+      "role": "네트워크 엔지니어",
+      "phone": "010-5751-9060"
+    },
+    {
+      "manager_id": 4,
+      "username": "desk01",
+      "password": "password111",
+      "name": "정수아",
+      "role": "안내 및 등록 데스크",
+      "phone": "010-7654-3210"
+    },
+    {
+      "manager_id": 5,
+      "username": "guard01",
+      "password": "password222",
+      "name": "강태우",
+      "role": "보안 및 안전 요원",
+      "phone": "010-4567-8901"
+    },
+    {
+      "manager_id": 6,
+      "username": "support01",
+      "password": "password333",
+      "name": "윤지민",
+      "role": "기술 지원 스태프",
+      "phone": "010-9876-5432"
+    },
+    {
+      "manager_id": 7,
+      "username": "director01",
+      "password": "password777",
+      "name": "한재희",
+      "role": "총괄 무대 감독",
+      "phone": "010-5678-1234"
+    }
+  ]
+}
